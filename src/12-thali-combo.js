@@ -24,15 +24,15 @@
  *      - Example: createThaliDescription({name:"Rajasthani Thali", items:["dal","churma"], price:250, isVeg:true})
  *                 => "RAJASTHANI THALI (Veg) - Items: dal, churma - Rs.250.00"
  *
- *   2. getThaliStats(thalis)
- *      - Array of thali objects ka stats nikalo
- *      - .filter() se veg/non-veg count
- *      - .reduce() se average price
- *      - Math.min/Math.max se cheapest/costliest
- *      - .map() se saare names
- *      - Return: { totalThalis, vegCount, nonVegCount, avgPrice (2 decimal string),
- *                  cheapest (number), costliest (number), names (array) }
- *      - Agar thalis array nahi hai ya empty hai, return null
+//  *   2. getThaliStats(thalis)
+//  *      - Array of thali objects ka stats nikalo
+//  *      - .filter() se veg/non-veg count
+//  *      - .reduce() se average price
+//  *      - Math.min/Math.max se cheapest/costliest
+//  *      - .map() se saare names
+//  *      - Return: { totalThalis, vegCount, nonVegCount, avgPrice (2 decimal string),
+//  *                  cheapest (number), costliest (number), names (array) }
+//  *      - Agar thalis array nahi hai ya empty hai, return null
  *
  *   3. searchThaliMenu(thalis, query)
  *      - .filter() + .includes() se search karo (case-insensitive)
@@ -44,7 +44,7 @@
  *      - Template literals + .map() + .join("\n") + .reduce() se receipt banao
  *      - Format:
  *        "THALI RECEIPT\n---\nCustomer: {NAME}\n{line items}\n---\nTotal: Rs.{total}\nItems: {count}"
- *      - Line item: "- {thali name} x Rs.{price}"
+ *      - Line item: "- {thali name} x Rs.{price}"  
  *      - customerName UPPERCASE mein
  *      - Agar customerName string nahi hai ya thalis array nahi hai/empty hai, return ""
  *
@@ -53,17 +53,87 @@
  *   // => "RAJASTHANI THALI (Veg) - Items: dal - Rs.250.00"
  */
 export function createThaliDescription(thali) {
-  // Your code here
+  if (typeof thali !== "object" || thali === null || Array.isArray(thali)) {
+    return "";
+  }
+
+  const { name, items, price, isVeg } = thali;
+
+  if (
+    typeof name !== "string" ||
+    !Array.isArray(items) ||
+    typeof price !== "number" ||
+    !isFinite(price) ||
+    typeof isVeg !== "boolean"
+  ) {
+    return "";
+  }
+
+  const vegText = isVeg ? "Veg" : "Non-Veg";
+  const priceText = price.toFixed(2);
+  const itemsText = items.join(", ");
+
+  return `${name.toUpperCase()} (${vegText}) - Items: ${itemsText} - Rs.${priceText}`;
 }
 
 export function getThaliStats(thalis) {
-  // Your code here
+  if (!Array.isArray(thalis) || thalis.length === 0) return null;
+
+  const totalThalis = thalis.length;
+  const vegCount = thalis.filter((thali) => thali.isVeg).length;
+  const nonVegCount = thalis.filter((thali) => !thali.isVeg).length;
+
+  const prices = thalis.map((thali) => thali.price);
+  const totalPrice = prices.reduce((sum, price) => sum + price, 0);
+  const avgPrice = (totalPrice / totalThalis).toFixed(2);
+
+  const cheapest = Math.min(...prices);
+  const costliest = Math.max(...prices);
+  const names = thalis.map((thali) => thali.name);
+
+  return {
+    totalThalis,
+    vegCount,
+    nonVegCount,
+    avgPrice,
+    cheapest,
+    costliest,
+    names,
+  };
 }
 
 export function searchThaliMenu(thalis, query) {
-  // Your code here
+  if (!Array.isArray(thalis) || typeof query !== "string") {
+    return [];
+  }
+  const LowerQuery = query.toLowerCase();
+  return thalis.filter(
+    (thali) =>
+      thali.name.toLowerCase().includes(LowerQuery) ||
+      thali.items.filter((item) => item.toLowerCase().includes(LowerQuery))
+        .length > 0
+  );
 }
 
 export function generateThaliReceipt(customerName, thalis) {
-  // Your code here
+  if (
+    !Array.isArray(thalis) ||
+    typeof customerName !== "string" ||
+    thalis.length <= 0
+  ) {
+    return "";
+  }
+  let UpperName = customerName.toUpperCase();
+  const listitems = thalis
+    .map((thali) => `- ${thali.name} x Rs.${thali.price}`)
+    .join("\n");
+  const total = thalis.reduce((sum, thali) => sum + thali.price, 0);
+  const count = thalis.length;
+  return `THALI RECEIPT
+---
+Customer: ${UpperName}
+${listitems}
+---
+Total: Rs.${total}
+Items: ${count}`;
 }
